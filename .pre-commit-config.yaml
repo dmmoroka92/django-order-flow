@@ -1,0 +1,32 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.4
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        files: ^backend/
+
+      - id: ruff-format
+        files: ^backend/
+
+  - repo: local
+    hooks:
+      - id: react-eslint
+        name: React ESLint
+        entry: frontend/node_modules/.bin/eslint --fix
+        language: system
+        files: ^frontend/.*\.(js|jsx|ts|tsx)$
+
+      - id: react-prettier
+        name: React Prettier
+        entry: frontend/node_modules/.bin/prettier --write
+        language: system
+        files: ^frontend/.*\.(js|jsx|ts|tsx|json|css|md|html)$
+
+      - id: conventional-commits
+        name: Validate Conventional Commits
+        entry: python3 scripts/check_commit_message.py
+        language: system
+        stages: [commit-msg]
+        pass_filenames: true
+        always_run: true  

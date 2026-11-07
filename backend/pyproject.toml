@@ -7,3 +7,50 @@ dependencies = [
     "djangorestframework>=3.18.3",
     "psycopg[binary]>=3.3.8",
 ]
+
+[dependency-groups]
+dev = [
+    "django-stubs>=6.1.2",
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "pytest-django>=4.14.0",
+    "ruff>=0.17.4",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "*_test.py"]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E4",   # Import and syntax-related errors
+    "E7",   # Statement errors
+    "E9",   # Runtime/syntax errors
+    "F",    # Pyflakes: undefined names, unused imports
+    "I",    # Import sorting
+    "B",    # Bugbear: common Python mistakes
+    "UP",   # Modern Python syntax
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.14"
+plugins = ["mypy_django_plugin.main"]
+
+files = ["config", "tests"]
+strict = true
+show_error_codes = true
+pretty = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
