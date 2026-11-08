@@ -92,10 +92,10 @@ jobs:
       - name: Install uv and Python
         uses: astral-sh/setup-uv@v6
         with:
+          version: "0.13.7"
           python-version: "3.14"
-
-          # Cache uv downloads to speed up future CI runs.
           enable-cache: true
+          cache-dependency-glob: backend/uv.lock
 
       # Install Python dependencies from uv.lock.
       # --frozen prevents uv from updating the lockfile.
