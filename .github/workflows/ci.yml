@@ -1,0 +1,182 @@
+
+# Name displayed in the GitHub Actions tab.
+name: OrderFlow CI
+
+# Grant the workflow read-only access to repository contents.
+# CI only needs to read code, not modify the repository.
+permissions:
+  contents: read
+
+# Events that automatically trigger this workflow.
+on:
+  # Run CI when a pull request is opened, updated, or reopened.
+  pull_request:
+
+  # Also run CI when code is pushed to the main branch.
+  push:
+    branches: [main]
+
+# Define independent jobs that can run in parallel.
+jobs:
+
+  # Backend job identifier.
+  backend:
+    # Human-readable job name displayed on GitHub.
+    name: Django Backend
+
+    # Run on a fresh GitHub-hosted Ubuntu virtual machine.
+    runs-on: ubuntu-latest
+
+    # Set the default directory for all "run" commands.
+    # This avoids writing "cd backend" before every command.
+    defaults:
+      run:
+        working-directory: backend
+
+    # Start additional containers required by this job.
+    services:
+      postgres:
+        # Use PostgreSQL version 18.
+        image: postgres:18
+
+        # Initialize the PostgreSQL container with a database,
+        # user, and password. These are disposable CI credentials.
+        env:
+          POSTGRES_DB: order_flow_test
+          POSTGRES_USER: order_flow_agent
+          POSTGRES_PASSWORD: OrderFlow_123
+
+        # Expose PostgreSQL port 5432 to the GitHub runner.
+        # Django can connect using localhost:5432.
+        ports:
+          - 5432:5432
+
+        # Configure a health check so GitHub waits until
+        # PostgreSQL is ready before running the job steps.
+        options: >-
+          --health-cmd "pg_isready -U order_flow_agent -d order_flow_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Environment variables available to backend job steps.
+    # Django reads these values from config/settings.py.
+    env:
+      # Database connection credentials.
+      # Must match the PostgreSQL service configuration above.
+      POSTGRES_DB: order_flow_test
+      POSTGRES_USER: order_flow_agent
+      POSTGRES_PASSWORD: Dummy_Password_CI_123
+
+      # PostgreSQL is accessible through localhost because
+      # Django runs directly on the GitHub runner.
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+
+      # Disable Django debug mode in CI.
+      DJANGO_DEBUG: "False"
+
+      # Disposable signing key used only for CI tests.
+      # Never use this key in production.
+      DJANGO_SECRET_KEY: ci-only-dummy-key-for-testing
+
+    # Steps execute sequentially within this job.
+    steps:
+
+      # Download repository source code onto the runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install uv (Python dependency/project manager)
+      # and make Python 3.14 available to the job.
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+
+          # Cache uv downloads to speed up future CI runs.
+          enable-cache: true
+
+      # Install Python dependencies from uv.lock.
+      # --frozen prevents uv from updating the lockfile.
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # Detect Python linting issues without modifying files.
+      - name: Check Python linting
+        run: uv run --no-sync ruff check .
+
+      # Verify that Python files follow Ruff formatting rules.
+      # --check reports differences without changing files.
+      - name: Check Python formatting
+        run: uv run --no-sync ruff format --check .
+
+      # Perform static type checking using mypy.
+      # Helps catch type errors before runtime.
+      - name: Check Python types
+        run: uv run --no-sync mypy .
+
+      # Run Django tests using pytest.
+      # Database tests can use the PostgreSQL service above.
+      - name: Run Django tests
+        run: uv run --no-sync pytest
+
+  # Frontend job identifier.
+  frontend:
+    # Human-readable job name displayed on GitHub.
+    name: React Frontend
+
+    # Run in a separate Ubuntu virtual machine.
+    # Backend and frontend jobs can execute in parallel.
+    runs-on: ubuntu-latest
+
+    # Execute shell commands inside the frontend directory.
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+
+      # Download repository source code onto this job's runner.
+      # Each job has its own isolated workspace.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install Node.js for React, Vite, and npm tooling.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Use Node.js version 24.
+          node-version: "24"
+
+          # Enable npm dependency caching for faster runs.
+          cache: npm
+
+          # Locate the npm lockfile inside the monorepo.
+          cache-dependency-path: frontend/package-lock.json
+
+      # Install exact dependency versions from package-lock.json.
+      # npm ci is designed for reproducible CI installations.
+      - name: Install dependencies
+        run: npm ci
+
+      # Check JavaScript, TypeScript, and React linting rules.
+      - name: Check ESLint
+        run: npm run lint
+
+      # Verify frontend formatting without modifying files.
+      - name: Check Prettier
+        run: npm run format:check
+
+      # Run TypeScript static type checking (tsc -b).
+      - name: Check TypeScript
+        run: npm run typecheck
+
+      # Execute frontend tests using Vitest.
+      - name: Run React tests
+        run: npm run test
+
+      # Compile and bundle the React application using Vite.
+      # Ensures the frontend can produce production assets.
+      - name: Build React application
+        run: npm run build
