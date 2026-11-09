@@ -1,5 +1,4 @@
-
-.PHONY: lint lint_fix test check
+.PHONY: lint lint_fix typecheck test check
 
 lint:
 	docker compose exec -T django uv run --no-sync ruff check .
@@ -13,8 +12,12 @@ lint_fix:
 	docker compose exec -T react npm run lint -- --fix
 	docker compose exec -T react npm run format
 
+typecheck:
+	docker compose exec -T django uv run --no-sync mypy .
+	docker compose exec -T react npm run typecheck
+
 test:
 	docker compose exec -T django uv run --no-sync pytest
 	docker compose exec -T react npm run test
 
-check: lint test
+check: lint typecheck test

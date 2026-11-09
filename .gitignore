@@ -40,6 +40,9 @@ staticfiles/
 !.env.example
 !.env.*.example
 
+# ==========================
+.venv/
+
 *.pem
 *.key
 
