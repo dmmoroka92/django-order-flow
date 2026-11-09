@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, ClassVar
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
@@ -41,7 +41,7 @@ class UserManager(BaseUserManager["User"]):
 
 
 class User(AbstractUser):
-    username = None
+    username = None  # type: ignore[assignment]
 
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150)
@@ -50,7 +50,7 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
-    objects = UserManager()
+    objects: ClassVar[UserManager] = UserManager()  # type: ignore[assignment]
 
     def __str__(self) -> str:
         return self.email
