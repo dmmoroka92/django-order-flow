@@ -21,3 +21,6 @@ test:
 	docker compose exec -T react npm run test
 
 check: lint typecheck test
+
+routes:
+	docker compose exec -T django uv run --no-sync python manage.py show_urls

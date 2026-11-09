@@ -29,6 +29,7 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       DJANGO_DEBUG: "True"
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY}
     depends_on:
       postgres:
         condition: service_healthy
