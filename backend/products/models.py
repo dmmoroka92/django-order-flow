@@ -44,3 +44,16 @@ class Product(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} - ({self.sku})"
+
+
+class Inventory(models.Model):
+    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name="inventory")
+    quantity = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Inventory"
+        verbose_name_plural = "Inventories"
+
+    def __str__(self) -> str:
+        return f"{self.product.sku}: ({self.quantity})"
