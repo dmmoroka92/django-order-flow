@@ -28,3 +28,7 @@ class InventorySerializer(serializers.ModelSerializer[Inventory]):
         model = Inventory
         fields = ["id", "product", "product_id", "quantity", "updated_at"]
         read_only_fields = ["id", "updated_at"]
+
+
+class StockInventorySerializer(serializers.Serializer[int]):
+    quantity = serializers.IntegerField(min_value=0)
