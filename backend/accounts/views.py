@@ -1,6 +1,6 @@
 from typing import Any, cast
 
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -11,6 +11,8 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import User
+from accounts.permissions import IsSuperadmin
+from accounts.serializers import ManagerCreateSerializer
 
 
 class LogoutView(APIView):
@@ -77,3 +79,8 @@ class MeView(APIView):
                 "is_superuser": user.is_superuser,
             }
         )
+
+
+class ManagerCreateView(generics.CreateAPIView[User]):
+    serializer_class = ManagerCreateSerializer
+    permission_classes = [IsAuthenticated, IsSuperadmin]
