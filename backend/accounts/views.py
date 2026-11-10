@@ -7,6 +7,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import User
@@ -15,9 +16,12 @@ from accounts.models import User
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def _belongs_to_user(self, token: RefreshToken, user: User) -> bool:
+        token_user_id = token.payload.get(api_settings.USER_ID_CLAIM)
+
+        return token_user_id is not None and str(token_user_id) == str(user.pk)
+
     def post(self, request: Request) -> Response:
-        # DRF can parse JSON objects or arrays.
-        # Our endpoint requires a JSON object.
         if not isinstance(request.data, dict):
             return Response(
                 {"detail": "Expected a JSON object."},
@@ -33,18 +37,23 @@ class LogoutView(APIView):
             )
 
         try:
-            # Simple JWT accepts a token string at runtime.
-            # The cast works around an incorrect/incomplete stub.
             token = RefreshToken(cast(Any, refresh_token))
+            user = request.user
+
+            if not isinstance(user, User) or not self._belongs_to_user(token, user):
+                return Response(
+                    {"detail": "Invalid refresh token."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             token.blacklist()
+
         except TokenError:
             return Response(
                 {"detail": "Invalid or expired refresh token."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Confirm the refresh token belongs to the authenticated user.
-        # This check should be performed BEFORE blacklisting.
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
