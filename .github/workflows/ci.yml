@@ -79,6 +79,7 @@ jobs:
       # Disposable signing key used only for CI tests.
       # Never use this key in production.
       DJANGO_SECRET_KEY: ci-only-dummy-key-for-testing
+      JWT_SIGNING_KEY: ci-only-dummy-key-for-testing
 
     # Steps execute sequentially within this job.
     steps:

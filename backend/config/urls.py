@@ -23,5 +23,6 @@ from accounts.views import ManagerCreateView
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("accounts.urls")),
+    path("api/", include("products.urls")),
     path("api/managers/", ManagerCreateView.as_view(), name="manager-create"),
 ]
