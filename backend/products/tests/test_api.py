@@ -144,23 +144,23 @@ class TestInventoryAPI:
         assert response.data["quantity"] == 20
 
     # UPDATE: PATCH /api/inventories/{id}/
-    def test_update_inventory(self, client: APIClient, inventory: Inventory) -> None:
+    def test_cannot_update_inventory(self, client: APIClient, inventory: Inventory) -> None:
         response = client.patch(
             f"/api/inventories/{inventory.pk}/",
             {"quantity": 25},
             format="json",
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 405
 
         inventory.refresh_from_db()
-        assert inventory.quantity == 25
+        assert inventory.quantity == 10
 
     # DESTROY: DELETE /api/inventories/{id}/
-    def test_delete_inventory(self, client: APIClient, inventory: Inventory) -> None:
+    def test_cannot_delete_inventory(self, client: APIClient, inventory: Inventory) -> None:
         inventory_id = inventory.pk
 
         response = client.delete(f"/api/inventories/{inventory_id}/")
 
-        assert response.status_code == 204
-        assert not Inventory.objects.filter(pk=inventory_id).exists()
+        assert response.status_code == 405
+        assert Inventory.objects.filter(pk=inventory_id).exists()

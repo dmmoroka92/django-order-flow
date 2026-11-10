@@ -3,10 +3,8 @@ from decimal import Decimal
 import pytest
 
 from products.models import Inventory, Product
-from products.services.stock_service import (
-    InsufficientStockError,
-    StockService,
-)
+from products.services.exceptions import InsufficientStockError
+from products.services.stock_service import StockService
 
 
 @pytest.mark.django_db
@@ -33,26 +31,32 @@ class TestStockService:
 
         assert inventory.quantity == 15
 
-    def test_restock_rejects_zero_quantity(self, inventory: Inventory) -> None:
+    @pytest.mark.parametrize("quantity", [0, -5])
+    def test_restock_rejects_invalid_quantity(self, inventory: Inventory, quantity: int) -> None:
         with pytest.raises(
             ValueError,
             match="Quantity must be greater than zero",
         ):
-            StockService.restock(inventory.id, 0)
+            StockService.restock(inventory.id, quantity)
 
-    def test_restock_rejects_negative_quantity(self, inventory: Inventory) -> None:
-        with pytest.raises(
-            ValueError,
-            match="Quantity must be greater than zero",
-        ):
-            StockService.restock(inventory.id, -5)
+        inventory.refresh_from_db()
+        assert inventory.quantity == 10
 
-    def test_restock_rejects_non_integer_quantity(self, inventory: Inventory) -> None:
+    @pytest.mark.parametrize("quantity", [5.5, "5", True])
+    def test_restock_rejects_non_integer_quantity(
+        self, inventory: Inventory, quantity: object
+    ) -> None:
         with pytest.raises(
             ValueError,
             match="Quantity must be an integer",
         ):
-            StockService.restock(inventory.id, 5.5)  # type: ignore[arg-type]
+            StockService.restock(
+                inventory.id,
+                quantity,  # type: ignore[arg-type]
+            )
+
+        inventory.refresh_from_db()
+        assert inventory.quantity == 10
 
     def test_restock_inventory_not_found(self) -> None:
         with pytest.raises(Inventory.DoesNotExist):
@@ -67,22 +71,47 @@ class TestStockService:
 
         assert inventory.quantity == 5
 
-    def test_remove_stock_rejects_zero_quantity(self, inventory: Inventory) -> None:
-        with pytest.raises(
-            ValueError,
-            match="Quantity must be greater than zero",
-        ):
-            StockService.remove_stock(inventory.id, 0)
+    def test_remove_all_available_stock(self, inventory: Inventory) -> None:
+        StockService.remove_stock(inventory.id, 10)
 
-    def test_remove_stock_rejects_negative_quantity(self, inventory: Inventory) -> None:
+        inventory.refresh_from_db()
+
+        assert inventory.quantity == 0
+
+    @pytest.mark.parametrize("quantity", [0, -5])
+    def test_remove_stock_rejects_invalid_quantity(
+        self, inventory: Inventory, quantity: int
+    ) -> None:
         with pytest.raises(
             ValueError,
             match="Quantity must be greater than zero",
         ):
-            StockService.remove_stock(inventory.id, -5)
+            StockService.remove_stock(inventory.id, quantity)
+
+        inventory.refresh_from_db()
+        assert inventory.quantity == 10
+
+    @pytest.mark.parametrize("quantity", [5.5, "5", True])
+    def test_remove_stock_rejects_non_integer_quantity(
+        self, inventory: Inventory, quantity: object
+    ) -> None:
+        with pytest.raises(
+            ValueError,
+            match="Quantity must be an integer",
+        ):
+            StockService.remove_stock(
+                inventory.id,
+                quantity,  # type: ignore[arg-type]
+            )
+
+        inventory.refresh_from_db()
+        assert inventory.quantity == 10
 
     def test_remove_stock_rejects_insufficient_stock(self, inventory: Inventory) -> None:
-        with pytest.raises(InsufficientStockError):
+        with pytest.raises(
+            InsufficientStockError,
+            match="Insufficient stock",
+        ):
             StockService.remove_stock(inventory.id, 15)
 
         inventory.refresh_from_db()

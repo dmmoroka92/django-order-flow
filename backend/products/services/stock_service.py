@@ -1,10 +1,7 @@
 from django.db import transaction
 
 from products.models import Inventory
-
-
-class InsufficientStockError(Exception):
-    pass
+from products.services.exceptions import InsufficientStockError
 
 
 class StockService:
