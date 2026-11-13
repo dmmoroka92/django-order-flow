@@ -25,4 +25,5 @@ urlpatterns = [
     path("api/auth/", include("accounts.urls")),
     path("api/", include("products.urls")),
     path("api/managers/", ManagerCreateView.as_view(), name="manager-create"),
+    path("api/", include("shipments.urls")),
 ]
