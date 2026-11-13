@@ -41,11 +41,19 @@ class UserManager(BaseUserManager["User"]):
 
 
 class User(AbstractUser):
+    class Role(models.TextChoices):
+        MANAGER = "manager", "Manager"
+        CUSTOMER = "customer", "Customer"
+
     username = None  # type: ignore[assignment]
 
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
+
+    role = models.CharField(
+        max_length=10, choices=Role.choices, default=Role.CUSTOMER, null=True, blank=True
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
