@@ -1,8 +1,13 @@
-import { useForm } from 'react-hook-form';
-import { LoginSchema, type LoginFormValues } from '../schemas/login.schema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { login } from '../api/auth.api';
+import { LoginSchema, type LoginFormValues } from '../schemas/login.schema';
+import { useAppStore } from '../../../app/store';
+import { useNavigate } from 'react-router';
 
 export const LoginForm = () => {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -12,12 +17,22 @@ export const LoginForm = () => {
     defaultValues: {
       email: '',
       password: '',
-      confirmPassword: '',
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    console.log('Login form submitted', data);
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      const response = await login(data);
+
+      const store = useAppStore.getState();
+
+      store.setAccessToken(response.access);
+      store.setUser(response.user);
+
+      navigate('/dashboard', { replace: true });
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
 
   return (
@@ -89,39 +104,6 @@ export const LoginForm = () => {
         {errors.password && (
           <p id="password-error" role="alert" className="text-xs font-medium text-rose-600">
             {errors.password.message}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700">
-          Confirm password
-        </label>
-
-        <input
-          id="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-          placeholder="Confirm your password"
-          aria-invalid={!!errors.confirmPassword}
-          aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
-          {...register('confirmPassword')}
-          className={`block w-full rounded-xl border bg-white px-4 py-3.5
-            text-sm text-slate-900 shadow-sm outline-none
-            transition-all duration-200
-            placeholder:text-slate-400
-            hover:border-slate-300
-            focus:ring-4
-            ${
-              errors.confirmPassword
-                ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/10'
-                : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/10'
-            }`}
-        />
-
-        {errors.confirmPassword && (
-          <p id="confirm-password-error" role="alert" className="text-xs font-medium text-rose-600">
-            {errors.confirmPassword.message}
           </p>
         )}
       </div>
