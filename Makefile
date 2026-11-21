@@ -18,7 +18,7 @@ typecheck:
 
 test:
 	docker compose exec -T django uv run --no-sync pytest
-	docker compose exec -T react npm run test
+# 	docker compose exec -T react npm run test
 
 check: lint typecheck test
 

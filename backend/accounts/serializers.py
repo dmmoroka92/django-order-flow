@@ -24,9 +24,12 @@ class ManagerCreateSerializer(serializers.ModelSerializer[User]):
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        data = super().validate(attrs)
+        data: dict[str, Any] = dict(super().validate(attrs))
 
         user = self.user
+
+        if user is None:
+            raise serializers.ValidationError("Authentication failed.")
 
         data["user"] = {
             "id": user.id,
