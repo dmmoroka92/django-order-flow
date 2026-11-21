@@ -1,12 +1,8 @@
-import { useAppStore } from '../../../app/store';
-
 export function DashboardPage() {
-  const user = useAppStore((state) => state.user);
-
   return (
-    <main>
-      <h1>Dashboard</h1>
-      <p>Welcome, {user?.firstName}!</p>
-    </main>
+    <div>
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <p className="mt-2 text-gray-500">Overview of products and shipments.</p>
+    </div>
   );
 }

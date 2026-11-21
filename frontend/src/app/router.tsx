@@ -1,8 +1,11 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 
+import { ProtectedRoute } from '../features/auth/components/ProtectedRoute';
+import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
-import { LoginPage } from '../features/pages/LoginPage';
-import { NotFoundPage } from '../features/pages/NotFoundPage';
+import { ProductsPage } from '../features/products/pages/ProductsPage';
+import { ShipmentsPage } from '../features/shipments/pages/ShipmentsPage';
+import { DashboardLayout } from './layouts/DashboardLayout';
 
 export const router = createBrowserRouter([
   {
@@ -10,11 +13,33 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: '/dashboard',
-    element: <DashboardPage />,
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <DashboardLayout />,
+        children: [
+          {
+            path: '/dashboard',
+            element: <DashboardPage />,
+          },
+          {
+            path: '/products',
+            element: <ProductsPage />,
+          },
+          {
+            path: '/shipments',
+            element: <ShipmentsPage />,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: '/',
+    element: <Navigate to="/dashboard" replace />,
   },
   {
     path: '*',
-    element: <NotFoundPage />,
+    element: <Navigate to="/dashboard" replace />,
   },
 ]);
