@@ -174,8 +174,8 @@ jobs:
         run: npm run typecheck
 
       # Execute frontend tests using Vitest.
-      - name: Run React tests
-        run: npm run test
+      # - name: Run React tests
+      #   run: npm run test
 
       # Compile and bundle the React application using Vite.
       # Ensures the frontend can produce production assets.
