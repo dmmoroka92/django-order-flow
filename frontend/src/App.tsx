@@ -1,5 +1,7 @@
+import { LoginPage } from './features/pages/LoginPage';
+
 function App() {
-  return <h1>OrderFlow</h1>;
+  return <LoginPage />;
 }
 
 export default App;

@@ -2,6 +2,7 @@ from typing import Any
 
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from accounts.models import User
 
@@ -19,3 +20,22 @@ class ManagerCreateSerializer(serializers.ModelSerializer[User]):
 
     def create(self, validated_data: dict[str, Any]) -> User:
         return User.objects.create_user(**validated_data)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        data: dict[str, Any] = dict(super().validate(attrs))
+
+        user = self.user
+
+        if user is None:
+            raise serializers.ValidationError("Authentication failed.")
+
+        data["user"] = {
+            "id": user.id,
+            "email": user.email,
+            "firstName": user.first_name,
+            "lastName": user.last_name,
+        }
+
+        return data

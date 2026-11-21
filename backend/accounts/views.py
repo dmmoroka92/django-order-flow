@@ -9,10 +9,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from accounts.models import User
 from accounts.permissions import IsSuperadmin
 from accounts.serializers import ManagerCreateSerializer
+
+from .serializers import CustomTokenObtainPairSerializer
 
 
 class LogoutView(APIView):
@@ -84,3 +87,7 @@ class MeView(APIView):
 class ManagerCreateView(generics.CreateAPIView[User]):
     serializer_class = ManagerCreateSerializer
     permission_classes = [IsAuthenticated, IsSuperadmin]
+
+
+class LoginView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
